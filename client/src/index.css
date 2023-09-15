@@ -1,0 +1,20 @@
+@font-face {
+  font-family: NeutonXBold;
+  src: url("./assets/font/Neuton-ExtraBold.ttf");
+}
+
+@font-face {
+  font-family: NeutonBold;
+  src: url("./assets/font/Neuton-Bold.ttf");
+}
+
+@font-face {
+  font-family: Neuton;
+  src: url("./assets/font/Neuton-Regular.ttf");
+}
+
+body {
+  padding: 0;
+  margin: 0;
+  font-family: Neuton sans-serif;
+}
