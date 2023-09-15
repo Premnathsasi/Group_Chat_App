@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -10,6 +11,8 @@ const Signup = () => {
   const emailInput = useRef();
   const passwordInput = useRef();
   const phoneInput = useRef();
+
+  const Navigate = useNavigate();
 
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -79,7 +82,14 @@ const Signup = () => {
           <button type="submit">CREATE</button>
         </form>
         <div className={classes.toggle}>
-          Already have an Account ? <span>Sign In</span>
+          Already have an Account ?{" "}
+          <span
+            onClick={() => {
+              Navigate("/");
+            }}
+          >
+            Sign In
+          </span>
         </div>
       </div>
       <ToastContainer />
