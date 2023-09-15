@@ -1,11 +1,11 @@
 /* eslint-disable no-unused-vars */
 import { useRef, useState } from "react";
 import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import classes from "./Signup.module.css";
 
 const Signup = () => {
-  const [isUserExist, setUserExist] = useState(false);
-  const [isError, setError] = useState(false);
   const nameInput = useRef();
   const emailInput = useRef();
   const passwordInput = useRef();
@@ -24,23 +24,18 @@ const Signup = () => {
         .post("http://localhost:3000/user/signup", obj)
         .then((res) => {
           console.log(res);
-          alert(res.data.message);
+          toast.success(res.data.message, { theme: "colored" });
         })
         .catch((err) => {
           console.log(err);
-          setError(true);
           if (err.response.data.error.name) {
-            setError(true);
-            setUserExist(true);
+            return toast.error("User already exists", { theme: "dark" });
           }
+          toast.error("Something went wrong");
         });
     } catch (err) {
       console.log(err);
     }
-    setTimeout(() => {
-      setError(false);
-      setUserExist(true);
-    }, 4000);
 
     nameInput.current.value = "";
     emailInput.current.value = "";
@@ -52,11 +47,7 @@ const Signup = () => {
     <section className={classes.container}>
       <div className={classes.main}>
         <h1>CREATE AN ACCOUNT</h1>
-        {isError && (
-          <h4 style={{ textAlign: "center", color: "red" }}>
-            {isUserExist ? "User already Exists" : "Something went wrong!"}
-          </h4>
-        )}
+
         <form onSubmit={submitHandler}>
           <div className={classes.formControl}>
             <input
@@ -91,6 +82,7 @@ const Signup = () => {
           Already have an Account ? <span>Sign In</span>
         </div>
       </div>
+      <ToastContainer />
     </section>
   );
 };

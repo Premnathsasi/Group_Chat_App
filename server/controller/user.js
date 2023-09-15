@@ -7,7 +7,6 @@ exports.signup = async (req, res, next) => {
     const saltRounds = 10;
     bcrypt.hash(password, saltRounds, async (err, hash) => {
       try {
-        console.log(err);
         const data = await User.create({
           name,
           email,
