@@ -1,11 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { useRef } from "react";
 import axios from "axios";
+import { useDispatch } from "react-redux";
+import { authActions } from "../store/AuthSlice";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import classes from "./Login.module.css";
 
 const Login = () => {
+  const dispatch = useDispatch();
   const Navigate = useNavigate();
   const mailInput = useRef();
   const passwordInput = useRef();
@@ -21,6 +24,9 @@ const Login = () => {
       const res = await axios.post("http://localhost:3000/user/login", obj);
       if (res) {
         toast.success(res.data.data, { theme: "dark" });
+        dispatch(authActions.login({ token: res.data.token }));
+        Navigate("/home");
+        console.log(res.data);
       }
     } catch (err) {
       console.log(err);

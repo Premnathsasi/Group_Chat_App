@@ -1,0 +1,26 @@
+.header {
+  height: 10%;
+  background-color: rgb(40, 63, 107);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header h2 {
+  color: white;
+  font-family: Neuton;
+  margin-left: 15px;
+}
+
+.header button {
+  padding: 7px 15px;
+  margin-right: 15px;
+  border: none;
+  background-color: rgb(5, 30, 63);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.header button:hover {
+  background-color: rgb(8, 17, 29);
+}
