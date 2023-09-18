@@ -4,6 +4,7 @@ const { authenticate } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.post("/postMessage", authenticate, messageController.postMessage);
+router.post("/", authenticate, messageController.postMessage);
+router.get("/", messageController.getMessage);
 
 module.exports = router;

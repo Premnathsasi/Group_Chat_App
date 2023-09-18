@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import Header from "../pages/Header";
 import classes from "./Home.module.css";
@@ -9,20 +9,37 @@ const Home = () => {
   const [messages, setMessages] = useState([]);
   const msgInput = useRef();
 
+  const getExpense = useCallback(async () => {
+    try {
+      const data = await axios.get("http://localhost:3000/message");
+      if (data) {
+        let newList = [];
+        data.data.data.map((item) => {
+          newList.push(item);
+        });
+        console.log(newList);
+        setMessages(newList);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }, []);
+
+  useEffect(() => {
+    getExpense();
+  }, []);
+
   const msgHandler = async () => {
-    // console.log(msgInput.current.value);
-    // setMessages((prev) => [...prev, msgInput.current.value]);
     try {
       const data = await axios.post(
-        "http://localhost:3000/message/postMessage",
+        "http://localhost:3000/message",
         { message: msgInput.current.value },
         {
           headers: { Authorization: token },
         }
       );
-
       if (data) {
-        setMessages((prev) => [...prev, data.data.data.message]);
+        setMessages((prev) => [...prev, data.data.data]);
       }
       console.log(data);
     } catch (err) {
@@ -40,7 +57,7 @@ const Home = () => {
             {messages.map((item, index) => (
               <div key={index} className={classes.msgChats}>
                 <div className={classes.msgSender}>
-                  <p>{item}</p>
+                  <p>{item.message}</p>
                 </div>
                 <p className={classes.senderName}>You</p>
               </div>
