@@ -25,12 +25,13 @@ const Login = () => {
       if (res) {
         toast.success(res.data.data, { theme: "dark" });
         dispatch(authActions.login({ token: res.data.token }));
+        localStorage.setItem("name", res.data.data);
         Navigate("/home");
         console.log(res.data);
       }
     } catch (err) {
       console.log(err);
-      toast.error(err.response.data.data, { theme: "colored" });
+      toast.error(err.response.data.message, { theme: "colored" });
     }
   };
 

@@ -28,7 +28,6 @@ const Signup = () => {
         .then((res) => {
           console.log(res);
           toast.success(res.data.message, { theme: "colored" });
-          Navigate("/");
         })
         .catch((err) => {
           console.log(err);

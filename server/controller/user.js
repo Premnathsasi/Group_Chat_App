@@ -38,16 +38,18 @@ exports.login = async (req, res, next) => {
     const { email, password } = req.body;
     const data = await User.findOne({ where: { email } });
     if (!data) {
-      return res.status(404).json({ data: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
     const passwordMatch = await bcrypt.compare(password, data.password);
     if (passwordMatch) {
       const token = generateToken(data.id);
-      return res.status(200).json({ data: "Successfully logged in", token });
+      return res
+        .status(200)
+        .json({ message: "Successfully logged in", data: data.name, token });
     } else {
-      return res.status(401).json({ data: "Incorrect Password" });
+      return res.status(401).json({ message: "Incorrect Password" });
     }
   } catch (err) {
-    res.status(500).json({ data: "Something went wrong" });
+    res.status(500).json({ message: "Something went wrong" });
   }
 };

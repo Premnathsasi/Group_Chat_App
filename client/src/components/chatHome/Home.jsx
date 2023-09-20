@@ -3,47 +3,58 @@ import axios from "axios";
 import Header from "../pages/Header";
 import classes from "./Home.module.css";
 
+const API_URL = "http://localhost:3000/message";
+
 const Home = () => {
   const token = localStorage.getItem("token");
+  const curUser = localStorage.getItem("name");
 
   const [messages, setMessages] = useState([]);
-  const msgInput = useRef();
+  const msgInput = useRef(null);
 
-  const getExpense = useCallback(async () => {
+  const getMessages = useCallback(async () => {
     try {
-      const data = await axios.get("http://localhost:3000/message");
-      if (data) {
-        let newList = [];
-        data.data.data.map((item) => {
-          newList.push(item);
-        });
-        console.log(newList);
-        setMessages(newList);
+      const response = await axios.get(API_URL);
+      if (response.data) {
+        setMessages(response.data.data);
+        console.log(response.data);
       }
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   }, []);
 
   useEffect(() => {
-    getExpense();
+    getMessages();
+    const inretvalID = setInterval(() => {
+      getMessages();
+    }, 2000);
+    return () => {
+      clearInterval(inretvalID);
+    };
   }, []);
 
-  const msgHandler = async () => {
+  const sendMessage = async () => {
+    const messageText = msgInput.current.value;
+    if (!messageText) return;
+
     try {
-      const data = await axios.post(
-        "http://localhost:3000/message",
-        { message: msgInput.current.value },
-        {
-          headers: { Authorization: token },
-        }
+      const response = await axios.post(
+        API_URL,
+        { message: messageText },
+        { headers: { Authorization: token } }
       );
-      if (data) {
-        setMessages((prev) => [...prev, data.data.data]);
+      if (response.data) {
+        const newMsg = {
+          ...response.data.data.dataValues,
+          ...response.data.data,
+        };
+        setMessages((prevMessages) => [...prevMessages, newMsg]);
+        msgInput.current.value = "";
+        console.log(response.data);
       }
-      console.log(data);
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   };
 
@@ -54,21 +65,33 @@ const Home = () => {
         <div className={classes.chats}>
           <div className={classes.sidebar}>sidebar</div>
           <div className={classes.msgContainer}>
-            {messages.map((item, index) => (
-              <div key={index} className={classes.msgChats}>
-                <div className={classes.msgSender}>
-                  <p>{item.message}</p>
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={
+                  curUser === message.user.name
+                    ? classes.msgChats
+                    : classes.msgChatReceived
+                }
+              >
+                <p
+                  className={
+                    curUser === message.user.name ? classes.senderName : ""
+                  }
+                >
+                  {curUser === message.user.name ? "You" : message.user.name}
+                </p>
+                <div
+                  className={
+                    curUser === message.user.name
+                      ? classes.msgSender
+                      : classes.recipient
+                  }
+                >
+                  <p>{message.message}</p>
                 </div>
-                <p className={classes.senderName}>You</p>
               </div>
             ))}
-
-            <div className={classes.msgChats}>
-              <p>Others</p>
-              <div className={classes.recipient}>
-                <p>Hey, good. You</p>
-              </div>
-            </div>
           </div>
         </div>
         <div className={classes.inputMsg}>
@@ -77,7 +100,7 @@ const Home = () => {
             placeholder="Type your message..."
             ref={msgInput}
           />
-          <button onClick={msgHandler}>Send</button>
+          <button onClick={sendMessage}>Send</button>
         </div>
       </div>
     </section>
