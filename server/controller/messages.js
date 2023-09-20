@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const Messages = require("../models/messages");
 const User = require("../models/user");
 
@@ -8,12 +9,10 @@ exports.postMessage = async (req, res, next) => {
       message,
     });
     if (data) {
-      return res
-        .status(201)
-        .json({
-          message: "message created",
-          data: { ...data, user: { name: req.user.name } },
-        });
+      return res.status(201).json({
+        message: "message created",
+        data: { ...data, user: { name: req.user.name } },
+      });
     }
   } catch (err) {
     res.status(500).json({ error: err });
@@ -22,7 +21,14 @@ exports.postMessage = async (req, res, next) => {
 
 exports.getMessage = async (req, res, next) => {
   try {
+    const { lastReceivedMessageId } = req.query;
+
     const data = await Messages.findAll({
+      where: {
+        id: {
+          [Op.gte]: lastReceivedMessageId,
+        },
+      },
       include: [
         {
           model: User,
