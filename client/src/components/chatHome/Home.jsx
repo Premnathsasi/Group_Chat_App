@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import axios from "axios";
 import Header from "../pages/Header";
+import Sidebar from "./Sidebar";
 import classes from "./Home.module.css";
 
 const API_URL = "http://localhost:3000/message";
@@ -8,6 +10,7 @@ const API_URL = "http://localhost:3000/message";
 const Home = () => {
   const token = localStorage.getItem("token");
   const curUser = localStorage.getItem("name");
+  const group = useSelector((state) => state.groups);
 
   const [messages, setMessages] = useState([]);
   const [lastReceivedMessageId, setLastReceivedMessageId] = useState(null);
@@ -22,7 +25,7 @@ const Home = () => {
   const getMessages = useCallback(async () => {
     try {
       const response = await axios.get(
-        `${API_URL}?lastReceivedMessageId=${lastReceivedMessageId || ""}`
+        `${API_URL}?groupId=${group.id}&lastReceivedMessageId=${lastReceivedMessageId}`
       );
       if (response.data) {
         const newData = response.data.data;
@@ -37,27 +40,26 @@ const Home = () => {
     } catch (err) {
       console.error(err);
     }
-  }, [lastReceivedMessageId]);
+  }, [group, lastReceivedMessageId]);
 
   useEffect(() => {
-    loadMessagesFromLocalStorage();
     getMessages();
     const inretvalID = setInterval(() => {
       getMessages();
-    }, 2000);
+      loadMessagesFromLocalStorage();
+    }, 1500);
     return () => {
       clearInterval(inretvalID);
     };
-  }, [getMessages]);
+  }, [group]);
 
   const storeMessageInLocalStorage = (message) => {
     let storedMessages = JSON.parse(localStorage.getItem("messages")) || [];
 
-    // Check if the last message is equal to the message passed
-    if (
-      storedMessages.length === 0 ||
-      storedMessages[storedMessages.length - 1].id !== message.id
-    ) {
+    // Check if the message already exists in storedMessages
+    const messageExists = storedMessages.some((msg) => msg.id === message.id);
+
+    if (!messageExists) {
       storedMessages.push(message);
 
       // Ensure we only store the most recent 10 messages
@@ -77,7 +79,7 @@ const Home = () => {
     try {
       const response = await axios.post(
         API_URL,
-        { message: messageText },
+        { message: messageText, groupId: group.id },
         { headers: { Authorization: token } }
       );
       if (response.data) {
@@ -101,36 +103,38 @@ const Home = () => {
       <div className={classes.container}>
         <Header />
         <div className={classes.chats}>
-          <div className={classes.sidebar}>sidebar</div>
-          <div className={classes.msgContainer} ref={chatContainerRef}>
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={
-                  curUser === message.user.name
-                    ? classes.msgChats
-                    : classes.msgChatReceived
-                }
-              >
-                <p
-                  className={
-                    curUser === message.user.name ? classes.senderName : ""
-                  }
-                >
-                  {curUser === message.user.name ? "You" : message.user.name}
-                </p>
+          <Sidebar />
+          {group.id && (
+            <div className={classes.msgContainer} ref={chatContainerRef}>
+              {messages.map((message) => (
                 <div
+                  key={message.id}
                   className={
                     curUser === message.user.name
-                      ? classes.msgSender
-                      : classes.recipient
+                      ? classes.msgChats
+                      : classes.msgChatReceived
                   }
                 >
-                  <p>{message.message}</p>
+                  <p
+                    className={
+                      curUser === message.user.name ? classes.senderName : ""
+                    }
+                  >
+                    {curUser === message.user.name ? "You" : message.user.name}
+                  </p>
+                  <div
+                    className={
+                      curUser === message.user.name
+                        ? classes.msgSender
+                        : classes.recipient
+                    }
+                  >
+                    <p>{message.message}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className={classes.inputMsg}>
           <input

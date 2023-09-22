@@ -1,0 +1,83 @@
+.sidebar {
+  background-color: aliceblue;
+  width: 25%;
+}
+
+.sidebar li {
+  list-style: none;
+  padding: 10px;
+  border-bottom: 2px solid lightgray;
+  cursor: pointer;
+}
+.newGroup {
+  display: flex;
+  justify-content: space-between;
+  margin: 5px;
+}
+.newGroup p {
+  font-size: 16px;
+}
+
+.newGroup button {
+  border: none;
+  cursor: pointer;
+}
+
+.createGroup {
+  padding: 20px 10px;
+  margin: 5px;
+}
+
+.createGroup h2 {
+  text-align: center;
+  font-family: Neuton;
+}
+
+.formControl {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px;
+}
+
+.formControl input {
+  width: 50%;
+  margin-left: 10px;
+  padding: 10px;
+  font-size: 18px;
+  border-radius: 5px;
+  border: 2px solid lightgray;
+}
+
+.formControl label {
+  font-family: Neuton;
+  font-weight: 500;
+  color: rgb(68, 68, 68);
+}
+
+.formControl select {
+  padding: 10px;
+  margin-left: 10px;
+}
+
+.btnCtrl {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.btnCtrl button {
+  margin: 10px;
+  padding: 8px 15px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
+.createbtn {
+  background-color: green;
+}
+
+.closebtn {
+  background: rgb(93, 16, 16);
+}
