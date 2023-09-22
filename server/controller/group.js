@@ -48,3 +48,31 @@ exports.addMembers = async (req, res, next) => {
     res.status(500).json({ error: err, message: "Error occurred" });
   }
 };
+
+exports.deleteMember = async (req, res, next) => {
+  try {
+    const { userId, groupId } = req.body;
+    const userGroup = await UserGroup.findOne({
+      where: {
+        groupId,
+        userId: req.user.id,
+      },
+    });
+
+    if (!userGroup || !userGroup.isAdmin) {
+      return res
+        .status(403)
+        .json({ message: "You are not an admin of the group." });
+    }
+
+    const data = await UserGroup.destroy({ where: { groupId, userId } });
+    if (data) {
+      return res
+        .status(200)
+        .json({ data: data, message: "Successfully deleted user" });
+    }
+    return res.status(404).json({ message: "User not found" });
+  } catch (err) {
+    res.status(500).json({ error: err, message: "Error Ocurred" });
+  }
+};

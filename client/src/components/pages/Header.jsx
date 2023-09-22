@@ -6,12 +6,19 @@ import { useDispatch, useSelector } from "react-redux";
 import classes from "./Header.module.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { faPlusSquare, faSearch } from "@fortawesome/free-solid-svg-icons";
+import {
+  faDeleteLeft,
+  faEllipsisVertical,
+  faPlusSquare,
+  faSearch,
+} from "@fortawesome/free-solid-svg-icons";
 import { useRef, useState } from "react";
 import axios from "axios";
 
 const Header = () => {
   const [showModal, setShowModal] = useState(false);
+  const [showList, setShowList] = useState(false);
+  const [participantsList, setParticipantsList] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchResult, setSearchResult] = useState("");
   const [memberId, setMemberId] = useState();
@@ -43,6 +50,47 @@ const Header = () => {
     }
   };
 
+  const showParticipantsHandler = async () => {
+    try {
+      const data = await axios.get(
+        `http://localhost:3000/user/${groupName.id}`
+      );
+      if (data) {
+        setParticipantsList(data.data.data.users);
+        setShowList(!showList);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const removeHandler = async (id) => {
+    try {
+      const data = await axios.delete("http://localhost:3000/group/delete", {
+        data: {
+          userId: id,
+          groupId: groupName.id,
+        },
+        headers: {
+          Authorization: token,
+        },
+      });
+
+      if (data) {
+        toast.success(data.data.message, { theme: "colored" });
+        const datas = participantsList.filter((item) => item.id !== id);
+        setParticipantsList(datas);
+      }
+    } catch (err) {
+      console.log(err);
+      if (err.response.status === 404) {
+        return toast.error("Something went wrong", { theme: "dark" });
+      } else if (err.response.status === 403) {
+        return toast.error(err.response.data.message, { theme: "dark" });
+      }
+    }
+  };
+
   const addMemberHandler = async () => {
     try {
       const response = await axios.post(
@@ -62,10 +110,10 @@ const Header = () => {
   return (
     <div className={classes.header}>
       <h2>Chat App</h2>
-      <div>{groupName.groupName}</div>
+      <h3>{groupName.groupName}</h3>
       {groupName.groupName && (
         <div className={classes.addMember}>
-          Add Members:{" "}
+          Add:
           <FontAwesomeIcon
             icon={faPlusSquare}
             size="xl"
@@ -74,10 +122,18 @@ const Header = () => {
             }}
           />
           <div className={classes.admin}>
-            {groupName.usergroup.isAdmin ? "Admin" : ""}
+            {groupName.usergroup && groupName.usergroup.isAdmin ? "Admin" : ""}
+          </div>
+          <div className={classes.viewMore}>
+            <FontAwesomeIcon
+              icon={faEllipsisVertical}
+              onClick={showParticipantsHandler}
+            />
           </div>
         </div>
       )}
+      <button onClick={logoutHandler}>Log out</button>
+      <ToastContainer />
       {showModal && (
         <Modal
           onClose={() => {
@@ -110,8 +166,26 @@ const Header = () => {
           </div>
         </Modal>
       )}
-      <button onClick={logoutHandler}>Log out</button>
-      <ToastContainer />
+
+      {showList && (
+        <div className={classes.participants}>
+          <h4>Participants</h4>
+          <ul>
+            {participantsList.map((item) => (
+              <div key={item.id}>
+                <li>{item.name}</li>
+                <FontAwesomeIcon
+                  icon={faDeleteLeft}
+                  id={item.id}
+                  onClick={() => {
+                    removeHandler(item.id);
+                  }}
+                />
+              </div>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

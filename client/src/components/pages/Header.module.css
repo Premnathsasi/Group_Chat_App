@@ -5,7 +5,8 @@
   align-items: center;
   justify-content: space-between;
 }
-.header h2 {
+.header h2,
+h3 {
   color: white;
   font-family: Neuton;
   margin-left: 15px;
@@ -31,8 +32,9 @@
 
 .addMember {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
+  flex: 0.3;
 }
 
 .addMember svg {
@@ -78,4 +80,35 @@
 .add svg {
   cursor: pointer;
   margin-left: 5px;
+}
+
+.viewMore {
+  margin: 0 40px;
+}
+
+.participants {
+  background-color: rgb(17, 40, 56);
+  color: black;
+  z-index: 25;
+  position: fixed;
+  right: 25em;
+  top: 7em;
+  width: 15em;
+  text-align: center;
+}
+
+.participants div {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.participants li {
+  padding: 7px;
+  border-bottom: 2px solid gray;
+  list-style: none;
+}
+
+.participants svg {
+  cursor: pointer;
 }

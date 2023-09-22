@@ -1,6 +1,8 @@
 const bcrypt = require("bcrypt");
-const User = require("../models/user");
 const jwt = require("jsonwebtoken");
+
+const User = require("../models/user");
+const Group = require("../models/group");
 
 const generateToken = (id) => {
   return jwt.sign({ id: id }, "a454a5478a4s5d1d21d54d88fr");
@@ -67,5 +69,25 @@ exports.getAllUsers = async (req, res, next) => {
     return res.status(404).json({ message: "User not found" });
   } catch (err) {
     res.status(500).json({ error: err, message: "Failed" });
+  }
+};
+
+exports.getUserByGroup = async (req, res, next) => {
+  try {
+    const { groupId } = req.params;
+    const data = await Group.findByPk(groupId, {
+      include: [
+        {
+          model: User,
+          attributes: ["id", "name"],
+        },
+      ],
+    });
+    if (data) {
+      return res.status(200).json({ data, message: "Participants found" });
+    }
+    return res.status(404).json({ message: "Participants not found" });
+  } catch (err) {
+    res.status(500).json({ error: err, message: "Error Ocurred" });
   }
 };
