@@ -48,12 +48,12 @@ const Sidebar = () => {
 
   useEffect(() => {
     getGroupList();
-    const intervalID = setInterval(() => {
-      getGroupList();
-    }, 3000);
-    return () => {
-      clearInterval(intervalID);
-    };
+    // const intervalID = setInterval(() => {
+    //   getGroupList();
+    // }, 3000);
+    // return () => {
+    //   clearInterval(intervalID);
+    // };
   }, []);
 
   const selectGroupHandler = (e) => {

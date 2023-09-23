@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const http = require("http");
 
 const sequelize = require("./util/database");
 
@@ -12,8 +13,10 @@ const userRoutes = require("./routes/user");
 const messageRoutes = require("./routes/messages");
 const groupRoutes = require("./routes/group");
 
-const app = express();
+const configureSocket = require("./socket/index");
 
+const app = express();
+const server = http.createServer(app);
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -27,16 +30,20 @@ app.use("/group", groupRoutes);
 
 User.hasMany(Messages);
 Messages.belongsTo(User);
-Group.hasMany(Messages, { as: "messages" });
+Group.hasMany(Messages);
 Messages.belongsTo(Group);
 User.belongsToMany(Group, { through: UserGroup });
 Group.belongsToMany(User, { through: UserGroup });
+
+const io = configureSocket(server);
 
 sequelize
   .sync()
   // .sync({ force: true })
   .then(() => {
-    app.listen(3000, () => {
+    server.listen(3000, () => {
       console.log("App running at port 3000");
     });
   });
+
+module.exports = { io };

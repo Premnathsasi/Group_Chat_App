@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import socketIoClient from "socket.io-client";
 import Header from "../pages/Header";
 import Sidebar from "./Sidebar";
 import classes from "./Home.module.css";
 
 const API_URL = "http://localhost:3000/message";
+const SOCKET_SERVER_URL = "http://localhost:3000";
 
 const Home = () => {
   const token = localStorage.getItem("token");
@@ -16,6 +18,7 @@ const Home = () => {
   const [lastReceivedMessageId, setLastReceivedMessageId] = useState(null);
   const msgInput = useRef(null);
   const chatContainerRef = useRef(null);
+  const socketRef = useRef();
 
   const loadMessagesFromLocalStorage = () => {
     const storedMessages = JSON.parse(localStorage.getItem("messages")) || [];
@@ -35,6 +38,7 @@ const Home = () => {
           newData.map((item) => {
             storeMessageInLocalStorage(item);
           });
+          setMessages(newData);
         }
       }
     } catch (err) {
@@ -43,14 +47,23 @@ const Home = () => {
   }, [group, lastReceivedMessageId]);
 
   useEffect(() => {
-    getMessages();
-    const inretvalID = setInterval(() => {
-      getMessages();
-      loadMessagesFromLocalStorage();
-    }, 1500);
+    socketRef.current = socketIoClient(SOCKET_SERVER_URL, {
+      query: { token },
+    });
+
+    socketRef.current.on("receive-message", (message) => {
+      setMessages((prev) => [...prev, message]);
+      scrollToBottom();
+    });
+    loadMessagesFromLocalStorage();
+
     return () => {
-      clearInterval(inretvalID);
+      socketRef.current.disconnect();
     };
+  }, [group.id, token]);
+
+  useEffect(() => {
+    getMessages();
   }, [group]);
 
   const storeMessageInLocalStorage = (message) => {
@@ -63,7 +76,7 @@ const Home = () => {
       storedMessages.push(message);
 
       // Ensure we only store the most recent 10 messages
-      if (storedMessages.length > 10) {
+      if (storedMessages.length > 25) {
         // Remove the oldest message (first message in the array)
         storedMessages.shift();
       }
@@ -76,19 +89,26 @@ const Home = () => {
     const messageText = msgInput.current.value;
     if (!messageText) return;
 
-    try {
-      const response = await axios.post(
-        API_URL,
-        { message: messageText, groupId: group.id },
-        { headers: { Authorization: token } }
-      );
-      if (response.data) {
-        msgInput.current.value = "";
-        scrollToBottom();
-      }
-    } catch (err) {
-      console.error(err);
-    }
+    socketRef.current.emit("send-message", {
+      text: messageText,
+      groupId: group.id,
+    });
+
+    msgInput.current.value = "";
+
+    // try {
+    //   const response = await axios.post(
+    //     API_URL,
+    //     { message: messageText, groupId: group.id },
+    //     { headers: { Authorization: token } }
+    //   );
+    //   if (response.data) {
+    //     msgInput.current.value = "";
+    //     scrollToBottom();
+    //   }
+    // } catch (err) {
+    //   console.error(err);
+    // }
   };
 
   const scrollToBottom = () => {
