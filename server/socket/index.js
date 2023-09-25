@@ -5,6 +5,7 @@ const Message = require("../models/messages");
 const User = require("../models/user");
 const Group = require("../models/group");
 const UserGroup = require("../models/userGroup");
+const s3Service = require("../services/s3Services");
 
 const configureSocket = (server) => {
   const io = new Server(server, {
@@ -18,7 +19,7 @@ const configureSocket = (server) => {
     const token = socket.handshake.query.token;
 
     try {
-      const user = jwt.verify(token, "a454a5478a4s5d1d21d54d88fr");
+      const user = jwt.verify(token, process.env.JWT_SECRET_KEY);
       socket.userId = user.id;
       next();
     } catch (err) {
@@ -32,19 +33,23 @@ const configureSocket = (server) => {
 
     socket.on("send-message", async (message) => {
       try {
-        const savedMessages = await Message.create({
-          message: message.text,
-          userId: socket.userId,
-          groupId: message.groupId,
-        });
-        if (savedMessages) {
-          const response = await User.findByPk(socket.userId, {
-            attributes: ["name"],
+        if (message.type === "text") {
+          const savedMessages = await Message.create({
+            message: message.text,
+            userId: socket.userId,
+            groupId: message.groupId,
           });
-          io.emit("receive-message", {
-            ...savedMessages.toJSON(),
-            user: { name: response.name },
-          });
+          if (savedMessages) {
+            const response = await User.findByPk(socket.userId, {
+              attributes: ["name"],
+            });
+            io.emit("receive-message", {
+              ...savedMessages.toJSON(),
+              user: { name: response.name },
+            });
+          }
+        } else {
+          console.log(message.data);
         }
       } catch (err) {
         console.log(err);

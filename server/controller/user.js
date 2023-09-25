@@ -5,7 +5,7 @@ const User = require("../models/user");
 const Group = require("../models/group");
 
 const generateToken = (id) => {
-  return jwt.sign({ id: id }, "a454a5478a4s5d1d21d54d88fr");
+  return jwt.sign({ id: id }, process.env.JWT_SECRET_KEY);
 };
 
 exports.signup = async (req, res, next) => {

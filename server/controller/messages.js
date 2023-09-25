@@ -2,27 +2,35 @@ const { Op } = require("sequelize");
 const Messages = require("../models/messages");
 const User = require("../models/user");
 const Group = require("../models/group");
+const { uploadToS3 } = require("../services/s3Services");
+const { io } = require("../app");
 
 exports.postMessage = async (req, res, next) => {
   try {
-    const { message, groupId } = req.body;
-    const group = await Group.findByPk(groupId);
-    if (!group) {
-      return res.status(404).json({ message: "Group not found" });
+    if (!req.file) {
+      return res.status(400).send("No files to upload");
     }
-    const data = await req.user.createMessage({
-      message,
-      groupId: group.id,
-    });
-    if (data) {
-      return res.status(201).json({
-        message: "Message Created",
-        data: {
-          ...data.toJSON(),
-          user: { name: req.user.name },
-          group: { name: group.name },
-        },
+    const { groupId } = req.body;
+    const { originalname, buffer, mimetype } = req.file;
+    const fileName = `${
+      req.user.id
+    }/upload${originalname}${new Date().toLocaleString()}`;
+    const fileUrl = await uploadToS3(buffer, fileName, mimetype);
+    if (fileUrl) {
+      const data = await req.user.createMessage({
+        fileUrl: fileUrl,
+        groupId: groupId,
       });
+      if (data) {
+        return res.status(200).json({
+          message: "message created",
+          data: {
+            ...data.toJSON(),
+            user: { name: req.user.name },
+          },
+        });
+      }
+      return res.status(404).json({ message: "No data found" });
     }
   } catch (err) {
     res.status(500).json({ error: err });

@@ -5,6 +5,8 @@ import socketIoClient from "socket.io-client";
 import Header from "../pages/Header";
 import Sidebar from "./Sidebar";
 import classes from "./Home.module.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPaperclip } from "@fortawesome/free-solid-svg-icons";
 
 const API_URL = "http://localhost:3000/message";
 const SOCKET_SERVER_URL = "http://localhost:3000";
@@ -15,7 +17,7 @@ const Home = () => {
   const group = useSelector((state) => state.groups);
 
   const [messages, setMessages] = useState([]);
-  const [lastReceivedMessageId, setLastReceivedMessageId] = useState(null);
+  const [files, setFiles] = useState(null);
   const msgInput = useRef(null);
   const chatContainerRef = useRef(null);
   const socketRef = useRef();
@@ -27,14 +29,11 @@ const Home = () => {
 
   const getMessages = useCallback(async () => {
     try {
-      const response = await axios.get(
-        `${API_URL}?groupId=${group.id}&lastReceivedMessageId=${lastReceivedMessageId}`
-      );
+      const response = await axios.get(`${API_URL}?groupId=${group.id}`);
       if (response.data) {
         const newData = response.data.data;
 
         if (newData.length > 0) {
-          setLastReceivedMessageId(newData[newData.length - 1].id);
           newData.map((item) => {
             storeMessageInLocalStorage(item);
           });
@@ -44,7 +43,7 @@ const Home = () => {
     } catch (err) {
       console.error(err);
     }
-  }, [group, lastReceivedMessageId]);
+  }, [group]);
 
   useEffect(() => {
     socketRef.current = socketIoClient(SOCKET_SERVER_URL, {
@@ -64,20 +63,21 @@ const Home = () => {
 
   useEffect(() => {
     getMessages();
+    scrollToBottom();
   }, [group]);
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
   const storeMessageInLocalStorage = (message) => {
     let storedMessages = JSON.parse(localStorage.getItem("messages")) || [];
 
-    // Check if the message already exists in storedMessages
     const messageExists = storedMessages.some((msg) => msg.id === message.id);
 
     if (!messageExists) {
       storedMessages.push(message);
 
-      // Ensure we only store the most recent 10 messages
       if (storedMessages.length > 25) {
-        // Remove the oldest message (first message in the array)
         storedMessages.shift();
       }
 
@@ -87,28 +87,38 @@ const Home = () => {
 
   const sendMessage = async () => {
     const messageText = msgInput.current.value;
-    if (!messageText) return;
+    if (!messageText && !files) return;
 
-    socketRef.current.emit("send-message", {
-      text: messageText,
-      groupId: group.id,
-    });
+    if (messageText) {
+      socketRef.current.emit("send-message", {
+        type: "text",
+        text: messageText,
+        groupId: group.id,
+      });
+      console.log(files);
+      msgInput.current.value = "";
+      setFiles(null);
+    } else if (files) {
+      try {
+        const formData = new FormData();
+        formData.append("file", files);
+        formData.append("groupId", group.id);
+        const data = await axios.post(API_URL, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: token,
+          },
+        });
 
-    msgInput.current.value = "";
-
-    // try {
-    //   const response = await axios.post(
-    //     API_URL,
-    //     { message: messageText, groupId: group.id },
-    //     { headers: { Authorization: token } }
-    //   );
-    //   if (response.data) {
-    //     msgInput.current.value = "";
-    //     scrollToBottom();
-    //   }
-    // } catch (err) {
-    //   console.error(err);
-    // }
+        if (data) {
+          console.log(data);
+          setMessages((prev) => [...prev, data.data.data]);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+      setFiles(null);
+    }
   };
 
   const scrollToBottom = () => {
@@ -149,7 +159,15 @@ const Home = () => {
                         : classes.recipient
                     }
                   >
-                    <p>{message.message}</p>
+                    {message.fileUrl ? (
+                      <img
+                        style={{ width: "20em" }}
+                        src={message.fileUrl}
+                        alt="imagess"
+                      />
+                    ) : (
+                      <p>{message.message}</p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -162,6 +180,20 @@ const Home = () => {
             placeholder="Type your message..."
             ref={msgInput}
           />
+
+          <div className={classes.addFile}>
+            <input
+              accept="image/*, video/*, .pdf"
+              type="file"
+              style={{ display: "none" }}
+              id="file"
+              onChange={(e) => setFiles(e.target.files[0])}
+            />
+            <label htmlFor="file">
+              <FontAwesomeIcon icon={faPaperclip} />
+            </label>
+          </div>
+
           <button onClick={sendMessage}>Send</button>
         </div>
       </div>

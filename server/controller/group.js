@@ -26,6 +26,9 @@ exports.getGroups = async (req, res, next) => {
 exports.addMembers = async (req, res, next) => {
   try {
     const { memberId, isAdmin, groupId } = req.body;
+    if (!memberId) {
+      return res.status(404).json({ message: "User not found" });
+    }
     const userGroup = await UserGroup.findOne({
       where: { groupId, userId: req.user.id },
     });

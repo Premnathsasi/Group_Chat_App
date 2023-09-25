@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const http = require("http");
+const dotenv = require("dotenv");
 
 const sequelize = require("./util/database");
 
@@ -22,6 +23,10 @@ app.use(
     origin: "http://localhost:5173",
   })
 );
+
+// app.use(cors());
+
+dotenv.config({ path: "./.env" });
 app.use(express.json({ extended: false }));
 
 app.use("/user", userRoutes);

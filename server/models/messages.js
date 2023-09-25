@@ -9,6 +9,7 @@ const Messages = sequelize.define("message", {
     allowNull: false,
   },
   message: Sequelize.STRING,
+  fileUrl: Sequelize.STRING,
 });
 
 module.exports = Messages;
